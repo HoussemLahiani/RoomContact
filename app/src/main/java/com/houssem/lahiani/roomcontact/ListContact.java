@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,31 +26,44 @@ public class ListContact extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_contact);
-
-        appDatabase=AppDatabase.getAppDatabase(ListContact.this);
-        contactDAO=appDatabase.contactDAO();
-
         ls=findViewById(R.id.lst);
-        Cursor c= contactDAO.getAllContacts();
-
-        SimpleCursorAdapter adapter= new SimpleCursorAdapter(ListContact.this,
-                R.layout.item,c,
-                new String[]{c.getColumnName(0),
-                        c.getColumnName(1),
-        c.getColumnName(2)},
-                new int[]{R.id.id,R.id.nom,R.id.phone},1);
-
-        ls.setAdapter(adapter);
-        ls.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        Thread thread=new Thread(new Runnable() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void run() {
+                appDatabase=AppDatabase.getAppDatabase(ListContact.this);
+                contactDAO=appDatabase.contactDAO();
 
-                TextView tid=view.findViewById(R.id.id);
-                Intent i=new Intent(getApplicationContext(),DetailActivity.class);
-                i.putExtra("id",tid.getText().toString());
-                startActivity(i);
+
+                Cursor c= contactDAO.getAllContacts();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        SimpleCursorAdapter adapter= new SimpleCursorAdapter(ListContact.this,
+                                R.layout.item,c,
+                                new String[]{c.getColumnName(0),
+                                        c.getColumnName(1),
+                                        c.getColumnName(2)},
+                                new int[]{R.id.id,R.id.nom,R.id.phone},1);
+
+                        ls.setAdapter(adapter);
+                        ls.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                                TextView tid=view.findViewById(R.id.id);
+                                Intent i=new Intent(getApplicationContext(),DetailActivity.class);
+                                i.putExtra("id",tid.getText().toString());
+                                startActivity(i);
+                            }
+                        });
+
+                    }
+                });
             }
-        });
+        }
+
+        );
+        thread.start();
 
 
     }

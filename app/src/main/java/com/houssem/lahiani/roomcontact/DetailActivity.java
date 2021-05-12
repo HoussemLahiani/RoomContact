@@ -15,13 +15,12 @@ public class DetailActivity extends AppCompatActivity {
     AppDatabase appDatabase;
     ContactDAO contactDAO;
     String id;
+    Contact c;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        appDatabase=AppDatabase.getAppDatabase(DetailActivity.this);
-        contactDAO=appDatabase.contactDAO();
 
         nom=findViewById(R.id.edtnom);
         phone=findViewById(R.id.edtphone);
@@ -29,9 +28,16 @@ public class DetailActivity extends AppCompatActivity {
         sup=findViewById(R.id.supprimer);
 
         id=getIntent().getStringExtra("id");
-        Contact c= contactDAO.selectOne(Integer.parseInt(id));
-        nom.setText(c.getName());
-        phone.setText(c.getPhone());
+        new Thread(()->{
+            executeDatabase();
+             c= contactDAO.selectOne(Integer.parseInt(id));
+
+            runOnUiThread(()->{
+                nom.setText(c.getName());
+                phone.setText(c.getPhone());
+            });
+        }).start();
+
 mod.setOnClickListener(new View.OnClickListener() {
     @Override
     public void onClick(View v)
@@ -40,21 +46,40 @@ mod.setOnClickListener(new View.OnClickListener() {
         ct.set_id(Integer.parseInt(id));
         ct.setName(nom.getText().toString());
         ct.setPhone(phone.getText().toString());
-
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        executeDatabase();
         contactDAO.update(ct);
         Intent i=new Intent(getApplicationContext(),ListContact.class);
         startActivity(i);
+    }
+}).start();
+
     }
 });
 
 sup.setOnClickListener(new View.OnClickListener() {
     @Override
     public void onClick(View v) {
-        contactDAO.delete(c);
-        Intent i=new Intent(getApplicationContext(),ListContact.class);
-        startActivity(i);
+        new Thread(()->{
+            executeDatabase();
+            contactDAO.delete(c);
+            Intent i=new Intent(getApplicationContext(),ListContact.class);
+            startActivity(i);
+        }).start();
+
     }
 });
+
+
+    }
+
+    public void executeDatabase()
+    {
+
+        appDatabase=AppDatabase.getAppDatabase(DetailActivity.this);
+        contactDAO=appDatabase.contactDAO();
 
 
     }

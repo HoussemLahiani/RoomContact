@@ -24,8 +24,7 @@ public static AppDatabase getAppDatabase(Context context)
             if(INSTANCE==null)
             {
                 INSTANCE= Room.databaseBuilder(context.getApplicationContext(),AppDatabase.class,
-                        "contactsManager")
-                        .allowMainThreadQueries().build();
+                        "contactsManager")/*.allowMainThreadQueries()*/.build();
             }
         }
 
